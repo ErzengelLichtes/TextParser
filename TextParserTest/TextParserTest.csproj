@@ -58,6 +58,7 @@
     <Compile Include="ParserTests\Expect.cs" />
     <Compile Include="ParserTests\Has.cs" />
     <Compile Include="ParserTests\Peek.cs" />
+    <Compile Include="ParserTests\PeekWord.cs" />
     <Compile Include="ParserTests\Read.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
