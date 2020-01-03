@@ -55,6 +55,7 @@
     <Compile Include="CharacterPositionTest.cs" />
     <Compile Include="Helper.cs" />
     <Compile Include="ParserTest.cs" />
+    <Compile Include="ParserTests\Expect.cs" />
     <Compile Include="ParserTests\Has.cs" />
     <Compile Include="ParserTests\Peek.cs" />
     <Compile Include="ParserTests\Read.cs" />
