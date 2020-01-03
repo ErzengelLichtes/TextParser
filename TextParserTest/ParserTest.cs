@@ -2,22 +2,13 @@
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TextParser;
+using static TextParserTest.Helper;
 
 namespace TextParserTest
 {
     [TestClass]
     public class ParserTest
     {
-        private static Parser CreateReader(string str)
-        {
-            return new Parser(new StringReader(str));
-        }
-        private static void AssertCharacterPosition(CharacterPosition expected, CharacterPosition actual, string message = null)
-        {
-            if (message != null) message = message + ".";
-            Assert.AreEqual(expected.Line, actual.Line, message + "Line");
-            Assert.AreEqual(expected.Character, actual.Character, message + "Character");
-        }
 
         [TestMethod]
         public void NullReaderThrowsException()
@@ -115,22 +106,6 @@ namespace TextParserTest
                 Assert.AreEqual("Read past the end of the file", e.ErrorMessage);
                 AssertCharacterPosition(new CharacterPosition(1, 4), e.CharacterPosition);
             }
-        }
-        [TestMethod]
-        public void StringHasFirstTwoCharacters()
-        {
-            var p = CreateReader("abc");
-            var r = p.Has("ab");
-            Assert.IsTrue(r);
-            AssertCharacterPosition(new CharacterPosition(1, 3), p.CharacterPosition);
-        }
-        [TestMethod]
-        public void StringNotHasWrongCharacters()
-        {
-            var p = CreateReader("abc");
-            var r = p.Has("c");
-            Assert.IsFalse(r);
-            AssertCharacterPosition(new CharacterPosition(1, 1), p.CharacterPosition);
         }
         [TestMethod]
         public void StringExpectFirstTwoCharacters()
