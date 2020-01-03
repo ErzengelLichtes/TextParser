@@ -26,13 +26,6 @@ namespace TextParserTest
         }
 
 
-        [TestMethod]
-        public void EmptyStringPeekReturnsNull()
-        {
-            var p = CreateReader("");
-            var result = p.Peek();
-            Assert.IsNull(result);
-        }
 
         [TestMethod]
         public void EmptyStringReadThrows()
@@ -51,28 +44,12 @@ namespace TextParserTest
         }
 
         [TestMethod]
-        public void StringPeeksFirstCharacter()
-        {
-            var p = CreateReader("abc");
-            var r = p.Peek();
-            Assert.AreEqual('a', r);
-            AssertCharacterPosition(new CharacterPosition(1, 1), p.CharacterPosition);
-        }
-        [TestMethod]
         public void StringReadsFirstCharacter()
         {
             var p = CreateReader("abc");
             var r = p.Read();
             Assert.AreEqual('a', r);
             AssertCharacterPosition(new CharacterPosition(1, 2), p.CharacterPosition);
-        }
-        [TestMethod]
-        public void StringPeeksSecondCharacter()
-        {
-            var p = CreateReader("abc");
-            var r = p.Peek(1);
-            Assert.AreEqual('b', r);
-            AssertCharacterPosition(new CharacterPosition(1, 1), p.CharacterPosition);
         }
         [TestMethod]
         public void StringReadsFirstTwoCharacters()
