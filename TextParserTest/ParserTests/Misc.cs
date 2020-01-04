@@ -4,7 +4,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TextParser;
 using static TextParserTest.Helper;
 
-namespace TextParserTest
+namespace TextParserTest.ParserTests
 {
     [TestClass]
     public class Misc
