@@ -61,6 +61,7 @@
     <Compile Include="ParserTests\Filename.cs" />
     <Compile Include="ParserTests\Has.cs" />
     <Compile Include="ParserTests\Peek.cs" />
+    <Compile Include="ParserTests\PeekInteger.cs" />
     <Compile Include="ParserTests\PeekWord.cs" />
     <Compile Include="ParserTests\Read.cs" />
     <Compile Include="ParserTests\ReadLine.cs" />
