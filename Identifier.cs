@@ -9,12 +9,12 @@ namespace TextParser
         private readonly CharacterPosition _startPosition;
         private readonly int               _amountToPop;
 
-        public Identifier(Parser parser, string text, int additonalLength = 0)
+        public Identifier(Parser parser, string text, int additionalLength = 0)
         {
             _parser        =  parser;
             _text          =  text;
             _startPosition = _parser.CharacterPosition;
-            _amountToPop   = text.Length + additonalLength;
+            _amountToPop   = text.Length + additionalLength;
         }
 
         public override string ToString()
