@@ -24,6 +24,20 @@ namespace TextParserTest
                 Assert.AreEqual("reader", e.ParamName);
             }
         }
+        [TestMethod]
+        public void PopDefault()
+        {
+            var p = CreateReader("abc");
+            p.Pop();
+            AssertCharacterPosition(new CharacterPosition(1,2), p.CharacterPosition);
+        }
+        [TestMethod]
+        public void PopCount2()
+        {
+            var p = CreateReader("abc");
+            p.Pop(2);
+            AssertCharacterPosition(new CharacterPosition(1, 3), p.CharacterPosition);
+        }
 
 
         [TestMethod]

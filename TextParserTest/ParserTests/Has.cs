@@ -28,7 +28,7 @@ namespace TextParserTest.ParserTests
         public void MiddleGood()
         {
             var p = CreateReader("abc");
-            p.Read();
+            p.Pop();
             var r = p.Has("b");
             Assert.IsTrue(r);
             AssertCharacterPosition(new CharacterPosition(1, 3), p.CharacterPosition);
@@ -37,7 +37,7 @@ namespace TextParserTest.ParserTests
         public void MiddleBad()
         {
             var p = CreateReader("abc");
-            p.Read();
+            p.Pop();
             var r = p.Has("x");
             Assert.IsFalse(r);
             AssertCharacterPosition(new CharacterPosition(1, 2), p.CharacterPosition);
@@ -46,7 +46,7 @@ namespace TextParserTest.ParserTests
         public void EndGood()
         {
             var p = CreateReader("abc");
-            p.Read(2);
+            p.Pop(2);
             var r = p.Has("c");
             Assert.IsTrue(r);
             AssertCharacterPosition(new CharacterPosition(1, 4), p.CharacterPosition);
@@ -55,7 +55,7 @@ namespace TextParserTest.ParserTests
         public void EndBad()
         {
             var p = CreateReader("abc");
-            p.Read(2);
+            p.Pop(2);
             var r = p.Has("x");
             Assert.IsFalse(r);
             AssertCharacterPosition(new CharacterPosition(1, 3), p.CharacterPosition);
@@ -64,7 +64,7 @@ namespace TextParserTest.ParserTests
         public void EndBadTooLong()
         {
             var p = CreateReader("abc");
-            p.Read(2);
+            p.Pop(2);
             var r = p.Has("cd");
             Assert.IsFalse(r);
             AssertCharacterPosition(new CharacterPosition(1, 3), p.CharacterPosition);
@@ -73,7 +73,7 @@ namespace TextParserTest.ParserTests
         public void PastEnd()
         {
             var p = CreateReader("abc");
-            p.Read(3);
+            p.Pop(3);
             var r = p.Has("c");
             Assert.IsFalse(r);
             AssertCharacterPosition(new CharacterPosition(1, 4), p.CharacterPosition);
