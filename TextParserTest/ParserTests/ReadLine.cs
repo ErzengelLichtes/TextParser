@@ -73,5 +73,51 @@ namespace TextParserTest.ParserTests
             Assert.AreEqual(3, p.CharacterPosition.Line);
             Assert.AreEqual(1, p.CharacterPosition.Character);
         }
+        [TestMethod]
+        [DataRow("asdf\ntest")]
+        [DataRow("asdf\r\ntest")]
+        [DataRow("asdf\rtest")]
+        public void HasNewline(string line)
+        {
+            var p  = CreateReader(line);
+            p.ReadWord();
+            var r = p.HasNewline();
+            Assert.IsTrue(r);
+            AssertCharacterPosition(new CharacterPosition(2,1), p.CharacterPosition);
+        }
+        [TestMethod]
+        public void HasNoNewline()
+        {
+            var p = CreateReader("asdf\ntest");
+            var r = p.HasNewline();
+            Assert.IsFalse(r);
+            AssertCharacterPosition(new CharacterPosition(1, 1), p.CharacterPosition);
+        }
+        [TestMethod]
+        [DataRow("asdf\ntest")]
+        [DataRow("asdf\r\ntest")]
+        [DataRow("asdf\rtest")]
+        public void ExpectNewline(string line)
+        {
+            var p = CreateReader(line);
+            p.ReadWord();
+            p.ExpectNewline();
+            AssertCharacterPosition(new CharacterPosition(2, 1), p.CharacterPosition);
+        }
+        [TestMethod]
+        public void ExpectNewlineFail()
+        {
+            try { 
+                var p = CreateReader("asdf\ntest");
+                p.ExpectNewline();
+            }
+            catch (CompilerException e)
+            {
+                StringAssert.Contains(e.Message, "Expected");
+                StringAssert.Contains(e.Message, "newline");
+
+                AssertCharacterPosition(new CharacterPosition(1, 1), e.CharacterPosition);
+            }
+        }
     }
 }
