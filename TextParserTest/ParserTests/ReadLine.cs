@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TextParser;
 using static TextParserTest.Helper;
@@ -9,11 +10,15 @@ namespace TextParserTest.ParserTests
     public class ReadLine
     {
         [TestMethod]
-        public void StringReadLineNewline()
+        [DataRow("no ws\ndef")]
+        [DataRow("ws after\n    def")]
+        [DataRow("ws before after  \n    def")]
+        [DataRow("ws before  \ndef")]
+        public void StringReadLineNewline(string line)
         {
-            var p = CreateReader("abc\ndef");
+            var p = CreateReader(line);
             var p1 = p.ReadLine();
-            Assert.AreEqual(p1, "abc");
+            Assert.AreEqual(p1, line.Split('\n').First());
             Assert.AreEqual(2, p.CharacterPosition.Line);
             Assert.AreEqual(1, p.CharacterPosition.Character);
         }
