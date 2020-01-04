@@ -38,5 +38,41 @@ namespace TextParserTest.ParserTests
             ident.Pop();
             AssertCharacterPosition(new CharacterPosition(1, 4), p.CharacterPosition, "end");
         }
+        
+        [TestMethod]
+        public void ExpectWordIdentifierNone()
+        {
+            try
+            { 
+                var p     = CreateReader("{abc}");
+                var ident = p.ReadWord();
+                Assert.Fail("Expected exception");
+            }
+            catch (CompilerException e)
+            {
+                StringAssert.Contains(e.Message, "Expected");
+                StringAssert.Contains(e.Message, "word");
+
+                AssertCharacterPosition(new CharacterPosition(1, 1), e.CharacterPosition);
+            }
+        }
+        [TestMethod]
+        public void ExpectWordIdentifier()
+        {
+            var p     = CreateReader("abc");
+            var ident = p.ReadWord();
+            Assert.IsNotNull(ident);
+            Assert.AreEqual("abc", ident);
+            AssertCharacterPosition(new CharacterPosition(1, 4), p.CharacterPosition, "end");
+        }
+        [TestMethod]
+        public void ExpectWordIdentifierWithExtra()
+        {
+            var p     = CreateReader("abc stuff");
+            var ident = p.ReadWord();
+            Assert.IsNotNull(ident);
+            Assert.AreEqual("abc", ident);
+            AssertCharacterPosition(new CharacterPosition(1, 4), p.CharacterPosition, "end");
+        }
     }
 }
