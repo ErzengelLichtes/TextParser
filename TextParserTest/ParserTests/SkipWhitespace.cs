@@ -31,9 +31,19 @@ namespace TextParserTest.ParserTests
             Assert.AreEqual("and", word2);
         }
         [TestMethod]
-        public void SkipCommentsMultiLine()
+        public void SkipCommentsRange()
         {
             var p    = CreateReader("abc /*stuff*/ and more");
+            var word = p.ReadWord();
+            p.SkipWhitespaceAndCStyleComments();
+            var word2 = p.ReadWord();
+            Assert.AreEqual("abc", word);
+            Assert.AreEqual("and", word2);
+        }
+        [TestMethod]
+        public void SkipCommentsMultiLine()
+        {
+            var p    = CreateReader("abc /*stuff\nand such*/ and more");
             var word = p.ReadWord();
             p.SkipWhitespaceAndCStyleComments();
             var word2 = p.ReadWord();
