@@ -57,6 +57,7 @@
     <Compile Include="ParserTests\Check.cs" />
     <Compile Include="ParserTests\CompileException.cs" />
     <Compile Include="ParserTests\HasScope.cs" />
+    <Compile Include="ParserTests\Identifier.cs" />
     <Compile Include="ParserTests\Misc.cs" />
     <Compile Include="ParserTests\Expect.cs" />
     <Compile Include="ParserTests\Filename.cs" />
