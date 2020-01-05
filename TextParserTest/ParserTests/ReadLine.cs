@@ -110,6 +110,7 @@ namespace TextParserTest.ParserTests
             try { 
                 var p = CreateReader("asdf\ntest");
                 p.ExpectNewline();
+                Assert.Fail("Expected exception");
             }
             catch (CompilerException e)
             {
