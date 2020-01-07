@@ -15,6 +15,10 @@ namespace TextParserTest
         {
             return new Parser(new StringReader(str));
         }
+        public static Parser CreateWsReader(string str)
+        {
+            return new SkipWhitespaceParser(new StringReader(str));
+        }
         public static void AssertCharacterPosition(CharacterPosition expected, CharacterPosition actual, string message = null)
         {
             if (message != null) message = message + ".";
