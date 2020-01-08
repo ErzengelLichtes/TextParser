@@ -108,31 +108,38 @@ namespace TextParser
         {
             return new CompilerException(message, Filename, CharacterPosition);
         }
+
+        public virtual bool SkipIgnoredText() { return SkipWhitespace(); }
+
         /// <summary>
         /// Checks to see if str is at the head. If so, it moves the head past it and returns true.
         /// Has side-effects.
         /// </summary>
         /// <param name="str"></param>
+        /// <param name="skip">Parameter used by derived classes to suspend any skipping</param>
         /// <returns></returns>
         [MustUseReturnValue]
-        public virtual bool Has([NotNull] string str)
+        public bool Has([NotNull] string str, bool skip=true)
         {
-            if (!Check(str)) 
+            if (!Check(str, skip)) 
                 return false;
 
             Pop(str.Length);
             return true;
         }
+
         /// <summary>
         /// Checks to see if str is at the head. If so, it returns true.
         /// Does NOT have side effects.
         /// </summary>
         /// <param name="str"></param>
+        /// <param name="skip">Parameter used by derived classes to suspend any skipping</param>
         /// <returns></returns>
         [MustUseReturnValue]
-        public virtual bool Check([NotNull] string str)
+        public bool Check([NotNull] string str, bool skip=true)
         {
             if (str == null) throw new ArgumentNullException(nameof(str));
+            if (skip) this.SkipIgnoredText();
             return !str.Where((c, i) => Peek(i) != c).Any();
         }
 
@@ -141,38 +148,43 @@ namespace TextParser
         /// Has side-effects.
         /// </summary>
         /// <param name="str"></param>
-        public virtual void Expect([NotNull] string str)
+        /// <param name="skip">Parameter used by derived classes to suspend any skipping</param>
+        public void Expect([NotNull] string str, bool skip=true)
         {
             if (str == null) throw new ArgumentNullException(nameof(str));
-            if (str.Where((c, i) => Peek(i) != c).Any())
+            if (!Check(str, skip))
             {
                 throw CompileException($"Expected {str}");
             }
             Pop(str.Length);
         }
+
         /// <summary>
         /// Checks to see if any of the keys in the dictionary are at the head. If so, it moves the head forward and calls the associated value. If not, it throws a compile exception.
         /// Has side-effects.
         /// </summary>
-        /// <param name="callbacks"></param>
-        public void Expect(Dictionary<string, Action<Parser>> callbacks)
+        /// <param name="callbacks">The expected keywords and their associated callbacks</param>
+        /// <param name="skip">If true, will ensure ignored text is skipped before parsing the tokens</param>
+        public void Expect(Dictionary<string, Action<Parser>> callbacks, bool skip=true)
         {
+            if(skip) SkipIgnoredText();
             // NOTE: "Has" has side effects on success, so we need to stop after it passes. Thus we need to use "First*".
-            var callback = (from p in callbacks where Has(p.Key) select p.Value).FirstOrDefault();
+            var callback = (from p in callbacks where Has(p.Key, skip: false) select p.Value).FirstOrDefault();
             if (callback == null) throw CompileException($"Expected one of the following: {string.Join(", ", callbacks.Keys)}.");
             callback(this);
         }
 
         static readonly Regex RxCStyleFirst = new Regex("[_a-zA-Z]");
         static readonly Regex RxCStyleRemaining = new Regex("[_a-zA-Z0-9]");
-
+        
+        /// <param name="skip">Parameter used by derived classes to suspend any skipping</param>
         [CanBeNull, MustUseReturnValue]
-        public virtual Identifier PeekInteger()
+        public Identifier PeekInteger(bool skip=true)
         {
+            if(skip) SkipIgnoredText();
             int ahead = 0;
             char? c = Peek(ahead++);
-            if (c == null
-                || !(char.IsDigit(c.Value) || c == '-'))
+            if (c == null || !(char.IsDigit(c.Value) || c == '-'))
                 return null;
             var b = new StringBuilder();
             b.Append(c);
@@ -186,21 +198,21 @@ namespace TextParser
             return new Identifier(this, b.ToString());
         }
 
-        public string ReadInteger()
+        public string ReadInteger(bool skip =true)
         {
-            var identifier = PeekInteger();
+            var identifier = PeekInteger(skip);
             if (identifier == null) throw CompileException("Expected identifier");
             identifier.Pop();
             return identifier.ToString();
         }
 
         [CanBeNull, MustUseReturnValue]
-        public virtual Identifier PeekCStyleIdentifier()
+        public Identifier PeekCStyleIdentifier(bool skip=true)
         {
+            if(skip) SkipIgnoredText();
             int ahead = 0;
             char? c = Peek(ahead++);
-            if (c == null
-                || !RxCStyleFirst.IsMatch(new string(c.Value, count: 1)))
+            if (c == null || !RxCStyleFirst.IsMatch(new string(c.Value, count: 1)))
                 return null;
             var b = new StringBuilder();
             b.Append(c);
@@ -213,17 +225,18 @@ namespace TextParser
             return new Identifier(this, b.ToString());
         }
         [MustUseReturnValue]
-        public string ReadCStyleIdentifier()
+        public string ReadCStyleIdentifier(bool skip =true)
         {
-            var identifier = PeekCStyleIdentifier();
+            var identifier = PeekCStyleIdentifier(skip);
             if (identifier == null) throw CompileException("Expected identifier");
             identifier.Pop();
             return identifier.ToString();
         }
 
         [CanBeNull, MustUseReturnValue]
-        public virtual Identifier PeekWord()
+        public Identifier PeekWord(bool skip =true)
         {
+            if(skip) SkipIgnoredText();
             int ahead = 0;
             char? c;
             var b = new StringBuilder();
@@ -239,17 +252,18 @@ namespace TextParser
             return b.Length != 0 ? new Identifier(this, b.ToString()) : null;
         }
         [MustUseReturnValue]
-        public string ReadWord()
+        public string ReadWord(bool skip =true)
         {
-            var identifier = PeekWord();
+            var identifier = PeekWord(skip);
             if (identifier == null) throw CompileException("Expected word");
             identifier.Pop();
             return identifier.ToString();
         }
         
         [CanBeNull, MustUseReturnValue]
-        public virtual Identifier PeekFilename(bool allowDirectory = false)
+        public Identifier PeekFilename(bool allowDirectory = false, bool skip =true)
         {
+            if(skip) SkipIgnoredText();
             int ahead = 0;
             char? c;
             var b = new StringBuilder();
@@ -289,9 +303,9 @@ namespace TextParser
             return new Identifier(this, b.ToString(), isQuote ? 2 : 0);
         }
         [MustUseReturnValue]
-        public string ReadFilename(bool allowDirectory = false)
+        public string ReadFilename(bool allowDirectory = false, bool skip =true)
         {
-            var identifier = PeekFilename(allowDirectory);
+            var identifier = PeekFilename(allowDirectory,skip);
             if (identifier == null) throw CompileException("Expected filename");
             identifier.Pop();
             return identifier.ToString();
@@ -329,49 +343,49 @@ namespace TextParser
             return c == '\n' || c == '\r' ? IsNewline.AtNewline : IsNewline.WhitespaceOnly;
         }
 
-        public void ExpectScope([NotNull] string scope, Action readBody)
+        public void ExpectScope([NotNull] string scope, Action readBody, bool skipBefore =true, bool skipInside =true)
         {
             if (scope == null) throw new ArgumentNullException(nameof(scope));
-            ExpectScope(scope, scope, readBody);
+            ExpectScope(scope, scope, readBody, skipBefore, skipInside);
         }
-        public void ExpectScope([NotNull] string scope, Func<bool> readBody)
+        public void ExpectScope([NotNull] string scope, Func<bool> readBody, bool skipBefore =true, bool skipInside =true)
         {
             if (scope == null) throw new ArgumentNullException(nameof(scope));
-            ExpectScope(scope, scope, readBody);
+            ExpectScope(scope, scope, readBody, skipBefore, skipInside);
         }
 
-        public void ExpectScope([NotNull] string open, [NotNull] string close, Action readBody)
+        public void ExpectScope([NotNull] string open, [NotNull] string close, Action readBody, bool skipBefore =true, bool skipInside =true)
         {
             ExpectScope(open, close, ()=> { 
                 readBody();
                 return true;
-            });
+            }, skipBefore, skipInside);
         }
-        public void ExpectScope([NotNull] string open, [NotNull] string close, Func<bool> readBody)
+        public void ExpectScope([NotNull] string open, [NotNull] string close, Func<bool> readBody, bool skipBefore =true, bool skipInside =true)
         {
-            if(!HasScope(open, close, readBody)) { 
+            if(!HasScope(open, close, readBody, skipBefore, skipInside)) { 
                 throw CompileException($"Expected {open}");
             }
         }
         
 
-        public bool HasScope([NotNull] string scope, Action readBody)
+        public bool HasScope([NotNull] string scope, Action readBody, bool skipBefore =true, bool skipInside =true)
         {
             if (scope == null) throw new ArgumentNullException(nameof(scope));
-            return HasScope(scope, scope, readBody);
+            return HasScope(scope, scope, readBody, skipBefore, skipInside);
         }
-        public bool HasScope([NotNull] string scope, Func<bool> readBody)
+        public bool HasScope([NotNull] string scope, Func<bool> readBody, bool skipBefore =true, bool skipInside =true)
         {
             if (scope == null) throw new ArgumentNullException(nameof(scope));
-            return  HasScope(scope, scope, readBody);
+            return  HasScope(scope, scope, readBody, skipBefore, skipInside);
         }
 
-        public bool HasScope([NotNull] string open, [NotNull] string close, Action readBody)
+        public bool HasScope([NotNull] string open, [NotNull] string close, Action readBody, bool skipBefore =true, bool skipInside =true)
         {
             return HasScope(open, close, ()=> { 
                                       readBody();
                                       return true;
-                                  });
+                                  }, skipBefore, skipInside);
         }
         /// <summary>
         /// Checks to see if there's a scope, and if so it will process it with readBody until it returns false or close is reached.
@@ -381,12 +395,12 @@ namespace TextParser
         /// <param name="open"></param>
         /// <param name="close"></param>
         /// <param name="readBody"></param>
-        public bool HasScope([NotNull] string open, [NotNull] string close, Func<bool> readBody)
+        public bool HasScope([NotNull] string open, [NotNull] string close, Func<bool> readBody, bool skipBefore =true, bool skipInside=true)
         {
             if (open  == null) throw new ArgumentNullException(nameof(open ));
             if (close == null) throw new ArgumentNullException(nameof(close));
-            if (!Has(open)) return false;
-            while (!Has(close))
+            if (!Has(open, skipBefore)) return false;
+            while (!Has(close, skipInside))
             {
                 if (readBody() && !Eof) continue;
 
@@ -423,7 +437,7 @@ namespace TextParser
         }
 
         [MustUseReturnValue]
-        public virtual bool HasNewline()
+        public bool HasNewline()
         {
             switch (Peek())
             {
@@ -481,7 +495,7 @@ namespace TextParser
                     }
                 }
                 result = Read(ahead - 1);
-            });
+            }, skipInside:false);
             return result;
         }
 

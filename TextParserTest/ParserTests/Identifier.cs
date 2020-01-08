@@ -40,7 +40,7 @@ namespace TextParserTest.ParserTests
         public void PeekCStyleFail()
         {
             var p = CreateReader("  test");
-            var r = p.PeekCStyleIdentifier();
+            var r = p.PeekCStyleIdentifier(skip:false);
             Assert.IsNull(r);
             AssertCharacterPosition(new CharacterPosition(1, 1), p.CharacterPosition);
         }
@@ -50,7 +50,7 @@ namespace TextParserTest.ParserTests
             try
             {
                 var p = CreateReader("  test");
-                var r = p.ReadCStyleIdentifier();
+                var r = p.ReadCStyleIdentifier(skip:false);
                 Assert.Fail("Expected exception");
             }
             catch (CompilerException e)
@@ -69,6 +69,14 @@ namespace TextParserTest.ParserTests
             var r = p.ReadQuotedString();
             Assert.AreEqual("test", r);
             AssertCharacterPosition(new CharacterPosition(1, 7), p.CharacterPosition);
+        }
+        [TestMethod]
+        public void ReadQuoteStringWithWhitespace()
+        {
+            var p = CreateReader("\"   \" asdf");
+            var r = p.ReadQuotedString();
+            Assert.AreEqual("   ", r);
+            AssertCharacterPosition(new CharacterPosition(1, 6), p.CharacterPosition);
         }
         [TestMethod]
         public void ReadQuoteStringFail()
