@@ -25,6 +25,27 @@ namespace TextParserTest.ParserTests
             }
         }
         [TestMethod]
+        public void SpecifiedPositionUpdates()
+        {
+            Parser p = new Parser("filename", TextReader.Null, new CharacterPosition(8, 16));
+            Assert.AreEqual("filename", p.Filename);
+            AssertCharacterPosition(new CharacterPosition(8, 16), p.CharacterPosition);
+        }
+        [TestMethod]
+        public void SpecifiedPositionUpdatesCharacter()
+        {
+            Parser p = new Parser("filename", new StringReader("abc"), new CharacterPosition(2, 51));
+            p.Pop();
+            AssertCharacterPosition(new CharacterPosition(2, 52), p.CharacterPosition);
+        }
+        [TestMethod]
+        public void SpecifiedPositionUpdatesLine()
+        {
+            Parser p = new Parser("filename", new StringReader("a\nbc"), new CharacterPosition(3, 16));
+            p.Pop(2);
+            AssertCharacterPosition(new CharacterPosition(4, 1), p.CharacterPosition);
+        }
+        [TestMethod]
         public void PopDefault()
         {
             var p = CreateReader("abc");

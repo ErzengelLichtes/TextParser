@@ -25,11 +25,12 @@ namespace TextParser
 
         }
 
-        public Parser(string filename, [NotNull] TextReader reader)
+        public Parser(string filename, [NotNull] TextReader reader, CharacterPosition? characterPosition = null)
         {
             Filename = filename;
             _reader = reader ?? throw new ArgumentNullException(nameof(reader));
-            CharacterPosition = new CharacterPosition(1, 1);
+            
+            CharacterPosition = characterPosition ?? new CharacterPosition(1, 1);
         }
 
 
@@ -174,9 +175,6 @@ namespace TextParser
             callback(this);
         }
 
-        static readonly Regex RxCStyleFirst = new Regex("[_a-zA-Z]");
-        static readonly Regex RxCStyleRemaining = new Regex("[_a-zA-Z0-9]");
-        
         /// <param name="skip">Parameter used by derived classes to suspend any skipping</param>
         [CanBeNull, MustUseReturnValue]
         public Identifier PeekInteger(bool skip=true)
@@ -205,7 +203,9 @@ namespace TextParser
             identifier.Pop();
             return identifier.ToString();
         }
-
+        
+        static readonly Regex RxCStyleFirst     = new Regex("[_a-zA-Z]");
+        static readonly Regex RxCStyleRemaining = new Regex("[_a-zA-Z0-9]");
         [CanBeNull, MustUseReturnValue]
         public Identifier PeekCStyleIdentifier(bool skip=true)
         {
