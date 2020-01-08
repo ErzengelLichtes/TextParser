@@ -9,7 +9,7 @@ using JetBrains.Annotations;
 namespace TextParser
 {
     [PublicAPI]
-    public class Parser
+    public partial class Parser
     {
         private readonly TextReader _reader;
         private readonly List<char> _peekedValue = new List<char>();
@@ -128,6 +128,15 @@ namespace TextParser
             Pop(str.Length);
             return true;
         }
+        [MustUseReturnValue]
+        public bool Has(char c, bool skip =true)
+        {
+            if (!Check(c, skip)) 
+                return false;
+
+            Pop();
+            return true;
+        }
 
         /// <summary>
         /// Checks to see if str is at the head. If so, it returns true.
@@ -142,6 +151,12 @@ namespace TextParser
             if (str == null) throw new ArgumentNullException(nameof(str));
             if (skip) this.SkipIgnoredText();
             return !str.Where((c, i) => Peek(i) != c).Any();
+        }
+        [MustUseReturnValue]
+        public bool Check(char c, bool skip =true)
+        {
+            if (skip) this.SkipIgnoredText();
+            return Peek() == c;
         }
 
         /// <summary>
@@ -158,6 +173,13 @@ namespace TextParser
                 throw CompileException($"Expected {str}");
             }
             Pop(str.Length);
+        }
+
+        public void Expect(char str, bool skip = true)
+        {
+            if(!Check(str, skip))
+                throw CompileException($"Expected {str}");
+            Pop();
         }
 
         /// <summary>
@@ -343,74 +365,6 @@ namespace TextParser
             return c == '\n' || c == '\r' ? IsNewline.AtNewline : IsNewline.WhitespaceOnly;
         }
 
-        public void ExpectScope([NotNull] string scope, Action<Parser> readBody, bool skipBefore =true, bool skipInside =true)
-        {
-            if (scope == null) throw new ArgumentNullException(nameof(scope));
-            ExpectScope(scope, scope, readBody, skipBefore, skipInside);
-        }
-        public void ExpectScope([NotNull] string scope, Func<Parser, bool> readBody, bool skipBefore =true, bool skipInside =true)
-        {
-            if (scope == null) throw new ArgumentNullException(nameof(scope));
-            ExpectScope(scope, scope, readBody, skipBefore, skipInside);
-        }
-
-        public void ExpectScope([NotNull] string open, [NotNull] string close, Action<Parser> readBody, bool skipBefore =true, bool skipInside =true)
-        {
-            ExpectScope(open, close, p=> { 
-                readBody(p);
-                return true;
-            }, skipBefore, skipInside);
-        }
-        public void ExpectScope([NotNull] string open, [NotNull] string close, Func<Parser, bool> readBody, bool skipBefore =true, bool skipInside =true)
-        {
-            if(!HasScope(open, close, readBody, skipBefore, skipInside)) { 
-                throw CompileException($"Expected {open}");
-            }
-        }
-        
-
-        public bool HasScope([NotNull] string scope, Action<Parser> readBody, bool skipBefore =true, bool skipInside =true)
-        {
-            if (scope == null) throw new ArgumentNullException(nameof(scope));
-            return HasScope(scope, scope, readBody, skipBefore, skipInside);
-        }
-        public bool HasScope([NotNull] string scope, Func<Parser, bool> readBody, bool skipBefore =true, bool skipInside =true)
-        {
-            if (scope == null) throw new ArgumentNullException(nameof(scope));
-            return  HasScope(scope, scope, readBody, skipBefore, skipInside);
-        }
-
-        public bool HasScope([NotNull] string open, [NotNull] string close, Action<Parser> readBody, bool skipBefore =true, bool skipInside =true)
-        {
-            return HasScope(open, close, p=> { 
-                                      readBody(p);
-                                      return true;
-                                  }, skipBefore, skipInside);
-        }
-        /// <summary>
-        /// Checks to see if there's a scope, and if so it will process it with readBody until it returns false or close is reached.
-        /// Otherwise, it returns false.
-        /// Has side-effects.
-        /// </summary>
-        /// <param name="open"></param>
-        /// <param name="close"></param>
-        /// <param name="readBody"></param>
-        public bool HasScope([NotNull] string open, [NotNull] string close, Func<Parser, bool> readBody, bool skipBefore =true, bool skipInside=true)
-        {
-            if (open  == null) throw new ArgumentNullException(nameof(open ));
-            if (close == null) throw new ArgumentNullException(nameof(close));
-            if (!Has(open, skipBefore)) return false;
-            while (!Has(close, skipInside))
-            {
-                if (readBody(this) && !Eof) continue;
-
-                Expect(close);
-                break;
-            }
-
-            return true;
-        }
-
         [NotNull]
         public string ReadLine()
         {
@@ -479,16 +433,17 @@ namespace TextParser
             actual.Pop();
         }
 
-        public string ReadQuotedString()
+        public string ReadQuotedString(char quote='"')
         {
             string result = null;
-            ExpectScope("\"", p =>
+            var expectedQuote = new string(quote, 1);
+            ExpectScope(expectedQuote, p =>
             {
                 char? c;
                 int ahead = 0;
                 while ((c = p.Peek(ahead++)) != null)
                 {
-                    if (c == '"') break;
+                    if (c == quote) break;
                     if (c == '\\')
                     {
                         ++ahead;

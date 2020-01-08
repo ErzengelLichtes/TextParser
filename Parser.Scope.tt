@@ -1,0 +1,116 @@
+﻿<#@ template debug="true" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ output extension=".cs" #>
+using System;
+using JetBrains.Annotations;
+
+namespace TextParser {
+<# this.PushIndent("    "); #>
+partial class Parser {
+<# 
+	this.PushIndent("    ");
+	foreach(var name in names) {
+		foreach(var scopeEdgeType in scopeEdgeTypes) {
+			var scopeNames = new string[]{scopeEdgeType.open, scopeEdgeType.close}.Distinct().ToArray();
+			foreach(var scopeType in scopeTypes) {
+				foreach(var bodyType in bodyTypes) {
+			#>
+public <#= name.returnType#> <#= name.prefix #>Scope(<#
+					foreach(var scopeName in scopeNames) {
+						if(scopeType.nullable) {
+							#>[NotNull] <#
+						}
+						#><#= scopeType.name#> <#= scopeName #>, <#
+					}
+				#><#= bodyType.name #> readBody, bool skipBefore = true, bool skipInside = true)
+{
+<#
+					this.PushIndent("    ");
+					foreach(var scopeName in scopeNames) {
+						if(scopeType.nullable) {
+							#>if(<#= scopeName #> == null) throw new ArgumentNullException(nameof(<#= scopeName #>));
+<#
+						}
+					}#>
+if(!Has(<#= scopeEdgeType.open #>, skipBefore)) <#= name.hasFailed.Replace("{open}", $"{{{scopeEdgeType.open}}}")#>;
+while(!Has(<#= scopeEdgeType.close #>, skipInside) && !Eof)
+{
+<# this.PushIndent("    "); #>
+<# if(bodyType.checkReturn == null) {
+#>readBody(this);
+<#
+} else { #>
+<#= bodyType.checkReturn.Replace("{result}", "readBody(this)") #>
+<#}#>
+Expect(<#= scopeEdgeType.close #>);
+break;
+<# this.PopIndent(); #>
+}
+<#= name.onSuccess #>
+<# this.PopIndent(); #>
+}
+<#
+				}
+			}
+		}
+	}
+
+
+
+	#>
+<# this.PopIndent(); #>
+}
+<# this.PopIndent(); #>
+}
+<# this.PopIndent(); #>
+
+<#+
+struct BodyType {
+	public string name;
+	public string checkReturn;
+}
+struct ScopeType {
+	public string name;
+	public bool nullable;
+}
+struct FunctionType {
+	public string prefix;
+	public string returnType;
+	public string hasFailed;
+	public string onSuccess;
+}
+struct ScopeEdgeType {
+	public string open;
+	public string close;
+}
+FunctionType[] names = {
+	new FunctionType { 
+		prefix = "Expect", 
+		returnType="void",
+		hasFailed="throw CompileException($\"Expected {open}\")",
+		onSuccess="",
+	}, 
+	new FunctionType { 
+		prefix = "Has", 
+		returnType = "bool",
+		hasFailed="return false",
+		onSuccess="return true;",
+	}
+};
+ScopeType[] scopeTypes = {
+new ScopeType { name= "char", nullable=false}, 
+new ScopeType { name= "string", nullable=true}
+};
+BodyType[] bodyTypes = {
+	new BodyType { name="Action<Parser>", checkReturn=null}, 
+	new BodyType { name="Func<Parser, bool>", checkReturn="if({result}) continue;"}
+};
+ScopeEdgeType[] scopeEdgeTypes = {
+	new ScopeEdgeType { open= "scope", close= "scope" },
+	new ScopeEdgeType { open= "open", close= "close" },
+};
+
+#>
