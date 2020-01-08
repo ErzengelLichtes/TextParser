@@ -10,7 +10,7 @@ namespace TextParserTest.ParserTests
     {
         class ScopeTest
         {
-            public Parser Parser;
+            public Parser Parser { get; }
             public bool   CallbackCalled;
 
             public ScopeTest(string lines)
@@ -19,16 +19,16 @@ namespace TextParserTest.ParserTests
                 CallbackCalled = false;
             }
 
-            public bool FullCallback()
+            public bool FullCallback(Parser p)
             {
-                ActionCallback();
+                ActionCallback(p);
                 return true;
             }
 
-            public void ActionCallback()
+            public void ActionCallback(Parser p)
             {
                 CallbackCalled = true;
-                Parser.Pop();
+                p.Pop();
             }
         }
 
@@ -52,7 +52,7 @@ namespace TextParserTest.ParserTests
             var p = s.Parser;
             var r = p.HasScope("("
                              , ")"
-                             , new Action(s.ActionCallback));
+                             , new Action<Parser>(s.ActionCallback));
             Assert.IsFalse(r);
             Assert.IsFalse(s.CallbackCalled);
             AssertCharacterPosition(new CharacterPosition(1, 1), p.CharacterPosition);
@@ -92,7 +92,7 @@ namespace TextParserTest.ParserTests
                 var p = CreateReader("(a)");
                 var r = p.HasScope("("
                                  , ")"
-                                 , () => false);
+                                 , _ => false);
                 Assert.Fail("Expected exception");
             }
             catch (CompilerException e)
@@ -135,7 +135,7 @@ namespace TextParserTest.ParserTests
             {
                 var p = CreateReader("'a'");
                 var r = p.HasScope("'"
-                                 , () => false);
+                                 , _ => false);
                 Assert.Fail("Expected exception");
             }
             catch (CompilerException e)
@@ -176,7 +176,7 @@ namespace TextParserTest.ParserTests
                 var p = s.Parser;
                 p.ExpectScope("("
                             , ")"
-                            , new Action(s.ActionCallback));
+                            , new Action<Parser>(s.ActionCallback));
             }
             catch (CompilerException e)
             {
@@ -219,7 +219,7 @@ namespace TextParserTest.ParserTests
                 var p = CreateReader("(a)");
                 p.ExpectScope("("
                             , ")"
-                            , () => false);
+                            , _ => false);
                 Assert.Fail("Expected exception");
             }
             catch (CompilerException e)
@@ -260,7 +260,7 @@ namespace TextParserTest.ParserTests
             {
                 var p = CreateReader("'a'");
                 p.ExpectScope("'"
-                            , () => false);
+                            , _ => false);
                 Assert.Fail("Expected exception");
             }
             catch (CompilerException e)
