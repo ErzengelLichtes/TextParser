@@ -46,7 +46,9 @@
   <ItemGroup>
     <Compile Include="CharacterPosition.cs" />
     <Compile Include="CompilerException.cs" />
+    <Compile Include="GenericParserFactory.cs" />
     <Compile Include="Identifier.cs" />
+    <Compile Include="IParserFactory.cs" />
     <Compile Include="Parser.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

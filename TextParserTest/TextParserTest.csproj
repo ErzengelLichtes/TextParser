@@ -53,6 +53,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CharacterPositionTest.cs" />
+    <Compile Include="GenericParserFactoryTest.cs" />
     <Compile Include="Helper.cs" />
     <Compile Include="ParserTests\Check.cs" />
     <Compile Include="ParserTests\CompileException.cs" />
